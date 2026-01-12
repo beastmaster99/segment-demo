@@ -1,8 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Segment JS Demo</title>
+  <meta charset="UTF-8" />
+  <title>Segment Visual Demo</title>
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      padding: 40px;
+    }
+
+    .card {
+      width: 720px;
+      background: #020617;
+      border-radius: 14px;
+      padding: 28px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 26px;
+    }
+
+    .meta {
+      color: #94a3b8;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    button {
+      background: #22c55e;
+      border: none;
+      padding: 14px 22px;
+      font-size: 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      color: #022c22;
+      font-weight: 600;
+    }
+
+    button:hover {
+      background: #16a34a;
+    }
+
+    .log {
+      margin-top: 28px;
+      background: #020617;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 18px;
+      max-height: 320px;
+      overflow-y: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 13px;
+    }
+
+    .entry {
+      border-bottom: 1px dashed #1e293b;
+      padding-bottom: 14px;
+      margin-bottom: 14px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #1e293b;
+      padding: 4px 8px;
+      border-radius: 6px;
+      margin-right: 6px;
+      color: #a5b4fc;
+      font-size: 12px;
+    }
+
+    .label {
+      color: #38bdf8;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      margin: 6px 0 0;
+      color: #e5e7eb;
+    }
+  </style>
 
   <!-- Segment snippet -->
   <script>
@@ -11,51 +94,22 @@
     if(analytics.invoked)window.console&&console.error&&console.error("Segment snippet included twice.");
     else{
       analytics.invoked=!0;
-      analytics.methods=[
-        "trackSubmit","trackClick","trackLink","trackForm",
-        "pageview","identify","reset","group","track",
-        "ready","alias","debug","page","screen",
-        "once","off","on","addSourceMiddleware",
-        "addIntegrationMiddleware","setAnonymousId",
-        "addDestinationMiddleware","register"
-      ];
+      analytics.methods=["track","identify","page","ready","getAnonymousId"];
       analytics.factory=function(e){return function(){
-        if(window[i].initialized)
-          return window[i][e].apply(window[i],arguments);
         var n=Array.prototype.slice.call(arguments);
-        if(["track","screen","alias","group","page","identify"].indexOf(e)>-1){
-          var c=document.querySelector("link[rel='canonical']");
-          n.push({
-            __t:"bpc",
-            c:c&&c.getAttribute("href")||void 0,
-            p:location.pathname,
-            u:location.href,
-            s:location.search,
-            t:document.title,
-            r:document.referrer
-          })
-        }
-        n.unshift(e);
-        analytics.push(n);
-        return analytics
+        n.unshift(e);analytics.push(n);return analytics
       }};
       for(var n=0;n<analytics.methods.length;n++){
         var key=analytics.methods[n];
         analytics[key]=analytics.factory(key)
       }
-      analytics.load=function(key,n){
+      analytics.load=function(key){
         var t=document.createElement("script");
-        t.type="text/javascript";
         t.async=!0;
-        t.setAttribute("data-global-segment-analytics-key",i);
         t.src="https://cdn.segment.com/analytics.js/v1/" + key + "/analytics.min.js";
         var r=document.getElementsByTagName("script")[0];
-        r.parentNode.insertBefore(t,r);
-        analytics._loadOptions=n
+        r.parentNode.insertBefore(t,r)
       };
-      analytics._writeKey="xEiDiPEAJsNfEJeWw4ggJhfUZ30gdqii";
-      analytics.SNIPPET_VERSION="5.2.0";
-
       analytics.load("xEiDiPEAJsNfEJeWw4ggJhfUZ30gdqii");
       analytics.page();
     }}();
@@ -63,17 +117,53 @@
 </head>
 
 <body>
-  <h1>Segment Demo Website</h1>
+  <div class="card">
+    <h1>Segment Website JS – Live Demo</h1>
+    <div class="meta">
+      Static site · Real-time event preview · No backend
+    </div>
 
-  <button onclick="sendEvent()">Send Track Event</button>
+    <button onclick="sendEvent()">🚀 Send Track Event</button>
+
+    <div class="log" id="log">
+      <div class="entry">
+        Waiting for events...
+      </div>
+    </div>
+  </div>
 
   <script>
+    const log = document.getElementById("log");
+
+    function addLog(data) {
+      const div = document.createElement("div");
+      div.className = "entry";
+
+      div.innerHTML = `
+        <span class="badge">track</span>
+        <span class="label">${data.event}</span><br/>
+        <span class="badge">time</span> ${data.time}<br/>
+        <span class="badge">anonymousId</span> ${data.anonymousId}
+        <pre>${JSON.stringify(data.properties, null, 2)}</pre>
+      `;
+
+      log.prepend(div);
+    }
+
     function sendEvent() {
-      analytics.track("Demo Button Clicked", {
-        demo: true,
-        source: "free-static-site"
-      });
-      alert("Event sent to Segment");
+      const eventData = {
+        event: "Demo Button Clicked",
+        properties: {
+          demo: true,
+          page: location.pathname,
+          source: "visual-static-demo"
+        },
+        time: new Date().toISOString(),
+        anonymousId: analytics.getAnonymousId()
+      };
+
+      analytics.track(eventData.event, eventData.properties);
+      addLog(eventData);
     }
   </script>
 </body>
